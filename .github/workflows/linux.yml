@@ -1,0 +1,124 @@
+name: Linux
+
+on:
+  pull_request:
+  push:
+  release:
+    types: published
+
+jobs:
+  # build:
+  #   runs-on: [ubuntu-latest]
+  #   container:
+  #     image: centos:7
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - uses: codespell-project/actions-codespell@master
+  #     with:
+  #       ignore_words_list: fo,wee
+  #   - name: Install dependencies
+  #     run: |
+  #       curl -L -O https://github.com/Kitware/CMake/releases/download/v3.23.3/cmake-3.23.3-Linux-x86_64.sh
+  #       chmod +x cmake-3.23.3-Linux-x86_64.sh
+  #       ./cmake-3.23.3-Linux-x86_64.sh --skip-license --prefix=/usr/local
+  #       curl -L -O https://www.mirrorservice.org/sites/dl.fedoraproject.org/pub/epel/7/x86_64/Packages/p/p7zip-16.02-20.el7.x86_64.rpm
+  #       curl -L -O https://www.mirrorservice.org/sites/dl.fedoraproject.org/pub/epel/7/x86_64/Packages/p/p7zip-plugins-16.02-20.el7.x86_64.rpm
+  #       rpm -U --quiet p7zip-16.02-20.el7.x86_64.rpm
+  #       rpm -U --quiet p7zip-plugins-16.02-20.el7.x86_64.rpm
+  #       yum install -y make gcc-c++ libasan clang-analyzer openssl-devel bzip2-devel libffi-devel wget
+  #       yum groupinstall -y "Development Tools"
+  #       wget https://www.python.org/ftp/python/3.10.2/Python-3.10.2.tgz
+  #       tar -xzf Python-3.10.2.tgz
+  #       cd Python-3.10.2
+  #       ./configure --enable-optimizations
+  #       make altinstall
+  #       cd ..
+  #       python3.10 -m pip install requests
+  #       python3.10 bootstrap.py KuroShinigami318 build_scripts
+  #       chmod +x build_scripts/decrypt.sh
+  #       chmod +x build_scripts/repo_init.sh
+  #       ./build_scripts/repo_init.sh
+
+  #   - name: Build debug ninja
+  #     shell: bash
+  #     env:
+  #       CFLAGS: -fstack-protector-all -fsanitize=address
+  #       CXXFLAGS: -fstack-protector-all -fsanitize=address
+  #     run: |
+  #       scan-build -o scanlogs cmake -DCMAKE_BUILD_TYPE=Debug -B debug-build
+  #       scan-build -o scanlogs cmake --build debug-build --parallel --config Debug
+
+  #   - name: Test debug ninja
+  #     run: ./ninja_test
+  #     working-directory: debug-build
+
+  #   - name: Build release ninja
+  #     shell: bash
+  #     run: |
+  #       cmake -DCMAKE_BUILD_TYPE=Release -B release-build
+  #       cmake --build release-build --parallel --config Release
+  #       strip release-build/ninja
+
+  #   - name: Test release ninja
+  #     run: ./ninja_test
+  #     working-directory: release-build
+
+  #   - name: Create ninja archive
+  #     run: |
+  #       mkdir artifact
+  #       7z a artifact/ninja-linux.zip ./release-build/ninja
+
+  #   # Upload ninja binary archive as an artifact
+  #   - name: Upload artifact
+  #     uses: actions/upload-artifact@v3
+  #     with:
+  #       name: ninja-binary-archives
+  #       path: artifact
+
+  #   - name: Upload release asset
+  #     if: github.event.action == 'published'
+  #     uses: actions/upload-release-asset@v1
+  #     env:
+  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     with:
+  #       upload_url: ${{ github.event.release.upload_url }}
+  #       asset_path: ./artifact/ninja-linux.zip
+  #       asset_name: ninja-linux.zip
+  #       asset_content_type: application/zip
+
+  test:
+    runs-on: [ubuntu-latest]
+    container:
+      image: ubuntu:20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install dependencies
+      run: |
+        apt update
+        apt install -y python3-pytest ninja-build clang-tidy python3-pip clang libgtest-dev python3 libasound2-dev
+        pip3 install requests
+        pip3 install cmake==3.23.3
+    - name: Configure (GCC)
+      run: cmake -Bbuild-gcc -DCMAKE_BUILD_TYPE=Debug -G'Ninja Multi-Config'
+
+    - name: Build (GCC, Debug)
+      run: cmake --build build-gcc --config Debug
+
+    - name: Build (GCC, Release)
+      run: cmake --build build-gcc --config Release
+
+    - name: Configure (Clang)
+      run: CC=clang CXX=clang++ cmake -Bbuild-clang -DCMAKE_BUILD_TYPE=Debug -G'Ninja Multi-Config' -DCMAKE_EXPORT_COMPILE_COMMANDS=1
+
+    - name: Build (Clang, Debug)
+      run: cmake --build build-clang --config Debug
+
+    - name: Build (Clang, Release)
+      run: cmake --build build-clang --config Release
+
+    - name: Build (Clang, RelWithDebInfo)
+      run: cmake --build build-clang --config RelWithDebInfo
+
+    - name: clang-tidy
+      run: /usr/lib/llvm-10/share/clang/run-clang-tidy.py
+      working-directory: build-clang
