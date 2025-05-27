@@ -35,7 +35,6 @@ jobs:
   #       cd ..
   #       python3.10 -m pip install requests
   #       python3.10 bootstrap.py KuroShinigami318 build_scripts
-  #       chmod +x build_scripts/decrypt.sh
   #       chmod +x build_scripts/repo_init.sh
   #       ./build_scripts/repo_init.sh
 
@@ -98,6 +97,10 @@ jobs:
         apt install -y python3-pytest ninja-build clang-tidy python3-pip clang libgtest-dev python3 libasound2-dev
         pip3 install requests
         pip3 install cmake==3.23.3
+        python3 bootstrap.py KuroShinigami318 build_scripts
+        chmod +x build_scripts/repo_init.sh
+        ./build_scripts/repo_init.sh
+
     - name: Configure (GCC)
       run: cmake -Bbuild-gcc -DCMAKE_BUILD_TYPE=Debug -G'Ninja Multi-Config'
 
