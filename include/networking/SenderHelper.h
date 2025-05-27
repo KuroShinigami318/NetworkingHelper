@@ -9,7 +9,7 @@ class SenderHelper
 {
 public:
 	SenderHelper(const utils::milisecs i_timeoutMs);
-	Result<void, SendRawTransferDataError> SendRawTransferData(ISocket& i_socket, RawTransferData& rawData);
+	utils::Result<void, SendRawTransferDataError> SendRawTransferData(ISocket& i_socket, RawTransferData& rawData);
 
 private:
 	const utils::milisecs m_timeoutMs;

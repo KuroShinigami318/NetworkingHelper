@@ -4,12 +4,12 @@
  {
     "name": "common",
     "prj_name": "CommonLib",
-    "tag": "master"
+    "tag": "v6.0.1"
  },
  {
     "name": "BSocketLib",
     "prj_name": "BSocketLib",
-    "tag": "v0.0.0"
+    "tag": "v0.0.1"
  },
  {
     "name": "nlohmannJson",

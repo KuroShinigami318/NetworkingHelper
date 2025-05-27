@@ -3,7 +3,7 @@
 #include "networking/RawTransferData.h"
 #include "networking/ReceiveRawTransferDataError.h"
 
-using ReceiveResult = Result<RawTransferData, ReceiveRawTransferDataError>;
+using ReceiveResult = utils::Result<RawTransferData, ReceiveRawTransferDataError>;
 
 class ReceiverHelper
 {

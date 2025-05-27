@@ -9,7 +9,7 @@ SenderHelper::SenderHelper(const utils::milisecs i_timeoutMs)
 {
 }
 
-Result<void, SendRawTransferDataError> SenderHelper::SendRawTransferData(ISocket& i_socket, RawTransferData& rawData)
+utils::Result<void, SendRawTransferDataError> SenderHelper::SendRawTransferData(ISocket& i_socket, RawTransferData& rawData)
 {
 	ISocket::BytesT bytes;
 	try
@@ -30,7 +30,7 @@ Result<void, SendRawTransferDataError> SenderHelper::SendRawTransferData(ISocket
 			nlohmann::json sendJson = rawData;
 			SERIALIZE_FUNC(sendJson, bytes);
 			auto waitable = utils::async(m_senderThread, [](ISocket* i_socket, ISocket::BytesT bytes, ISocket::BytesT msgBytes)
-				->Result<void, SendRawTransferDataError>
+				->utils::Result<void, SendRawTransferDataError>
 				{
 					if (auto writeResult = i_socket->WriteBytes(bytes); writeResult.isErr())
 					{
@@ -40,7 +40,7 @@ Result<void, SendRawTransferDataError> SenderHelper::SendRawTransferData(ISocket
 					{
 						return make_inner_error<SendRawTransferDataError>(TransferErrorCode::SendFailed, writeResult.unwrapErr());
 					}
-					return Ok();
+					return utils::Ok();
 				}, &i_socket, bytes, msgBytes);
 			auto waitfor = waitable.WaitFor(m_timeoutMs);
 			if (waitfor.isErr())
@@ -60,5 +60,5 @@ Result<void, SendRawTransferDataError> SenderHelper::SendRawTransferData(ISocket
 		return make_inner_error<SendRawTransferDataError>(TransferErrorCode::SerializationFailed, SerializationErrorCode::SerializeFailed, "Serialize failed! {}", e.what());
 	}
 
-	return Ok();
+	return utils::Ok();
 }
